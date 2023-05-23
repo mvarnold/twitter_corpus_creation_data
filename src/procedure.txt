@@ -1,0 +1,46 @@
+Brief outline of procedure:
+1. Run query.py
+    ex: `python query.py -w Nuclear -b "2016-01-01" -e "2022-03-15" --location='state'`
+
+    This queries the ambient tweet databases to return tweets matching a specified keyword,
+     between a begin date and end date.
+
+    Creates 4 files:
+        A json file containing the raw tweets as a local cache.
+        3 tsv files of tweets:
+            * one 1,000 tweet subsample, to be hand labeled.
+            * one 40,000 tweet subsample, for the interactive visualization
+                (enough points for density but not enough to create lagginess.
+            * one full data file, for classification.
+        The subsampled files are shuffled random samples.
+Notes:
+
+    For  multiple keyword queries, it's important to test each keyword for low precision words, to avoid being overrun with irrelevant tweets for classification, or irrelevant words contributing most to the divergence.
+
+2. Label the data.
+
+    This step can either happen in excel or numbers, or on specific data labeling software for IRR.
+    If in numbers, it's recommended to resize the Text column and run on text wrapping.
+
+    Export labeled data to tsv with "_labeled.tsv" appended to the initial base file name.
+
+3. Run train.py
+    ex: `python train.py -l "../data/Nuclear/Nuclear_2016-01-01_2022-08-30_D_False_state_top1000_labeled.tsv"
+     -m "sentence-transformers/all-MiniLM-L6-v2" -d "cuda"`
+
+     This command fine-tunes the selected pretrained model (-m) using labeled data (-l),
+      on device (-d) which can either be "cpu", 'mps' for macs, or "cuda" for GPU acceleration
+
+     Creates model files in `src/models/` directory
+
+
+4. Classify
+	ex: `python classify.py -u "../data/Wind/Wind_2016-01-01_2022-12-31_D_False_state.tsv" -m "models/Wind_2020-01-01_2021-01-01_D_False_state_top1000_labeled_all-mpnet-base-v2" -d 'cuda'`
+
+    specifying a tsv of tweets to classify, a trained model to use, and a device
+
+5. Compare Corpora
+
+    Generate plots to compare text between the relevant and non-relevant classified tweets, and between relevant tweets and a random sample of Twitter.
+
+    ex: `
